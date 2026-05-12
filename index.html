@@ -1,1 +1,62 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Docking Run is a short browser space game about gravity, time dilation, data recovery, and precision docking."><title>Docking Run</title><link rel="stylesheet" href="./styles.css"></head><body><main class="shell"><section class="hero"><div><p class="eyebrow">Unofficial fan-made browser game</p><h1>Docking Run</h1><p class="lede">Fly near the singularity, recover mission data, survive time dilation, and complete the final docking sequence.</p></div><div class="best"><span>Local Best</span><b id="best">0</b></div></section><section class="frame"><canvas id="game" width="1280" height="720"></canvas><div id="hud" class="hud"></div><div id="overlay" class="overlay"></div></section><section class="controls"><button id="left">◀ Rotate</button><button id="burn">Burn</button><button id="right">Rotate ▶</button><button id="dock">Dock</button></section><section class="notes"><h2>Controls</h2><p>Desktop: <kbd>W</kbd>/<kbd>↑</kbd>/<kbd>Space</kbd> burn, <kbd>A</kbd>/<kbd>←</kbd> and <kbd>D</kbd>/<kbd>→</kbd> rotate, <kbd>E</kbd>/<kbd>Enter</kbd> dock, <kbd>R</kbd> restart.</p><p>No official movie assets are used. This is an open-source fan project built around original visuals, physics-inspired mechanics, and score sharing.</p></section></main><script src="./src/game.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Docking Run</title>
+    <meta name="description" content="Docking Run is a cinematic browser game about singularity flight, data recovery, and precision docking." />
+    <link rel="stylesheet" href="./styles.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Original cinematic browser game</p>
+          <h1>Docking Run</h1>
+          <p class="subtitle">Recover deep-space data, survive the gravity well, and complete a high-risk docking sequence.</p>
+        </div>
+        <div class="stat-chip"><span>Local Best</span><strong id="bestScore">0</strong></div>
+      </header>
+
+      <section class="game-frame">
+        <canvas id="scene"></canvas>
+        <div class="vignette"></div>
+        <div class="scanlines"></div>
+        <div id="hud" class="hud"></div>
+        <div id="centerOverlay" class="center-overlay"></div>
+        <div class="bottom-panel">
+          <div class="mission-text"><span>Mission Feed</span><strong id="missionLine">Stand by for launch.</strong></div>
+          <div class="share-actions">
+            <button id="restartMini" class="ghost-button">Restart</button>
+            <button id="copyMini" class="ghost-button">Copy Score</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="touch-controls" aria-label="Touch controls">
+        <div class="control-pad left-cluster">
+          <button id="btnLeft" class="touch-btn">Left</button>
+          <button id="btnBurn" class="touch-btn accent">Burn</button>
+          <button id="btnRight" class="touch-btn">Right</button>
+        </div>
+        <div class="control-pad right-cluster"><button id="btnDock" class="touch-btn accent-alt">Dock</button></div>
+      </section>
+
+      <section class="info-card">
+        <h2>Controls</h2>
+        <p>Desktop: <kbd>A</kbd> rotate left, <kbd>D</kbd> rotate right, <kbd>W</kbd> or <kbd>Space</kbd> burn, <kbd>E</kbd> or <kbd>Enter</kbd> dock, <kbd>R</kbd> restart.</p>
+        <p>Mobile: use the touch controls below the game. The experience is optimized for both portrait and landscape mobile browsers.</p>
+      </section>
+    </main>
+
+    <script type="module" src="./src/game.js"></script>
+  </body>
+</html>
