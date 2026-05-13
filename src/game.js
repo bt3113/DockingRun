@@ -1,1 +1,208 @@
-const c=document.getElementById('game'),x=c.getContext('2d'),hud=document.getElementById('hud'),ov=document.getElementById('overlay'),bestEl=document.getElementById('best'); const W=1280,H=720,TAU=Math.PI*2,KEY='docking-run-best-v1';let state='menu',last=0,keys={},msg='',msgT=0,flash=0,g; const clamp=(n,a,b)=>Math.max(a,Math.min(b,n)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),fmt=n=>new Intl.NumberFormat('en-US').format(Math.round(n)); const norm=a=>(a%TAU+TAU)%TAU,ang=(a,b)=>{let d=norm(a)-norm(b);return d>Math.PI?d-TAU:d<-Math.PI?d+TAU:d}; const stars=Array.from({length:130},(_,i)=>({x:i*187%W,y:i*101%H,r:.45+(i%5)*.18,a:.25+(i%7)*.08})); function reset(){g={t:0,max:72,pack:0,bestMult:1,score:0,grade:'Pending',bonus:0,p:{x:155,y:372,vx:0,vy:0,a:-.1,fuel:100,hull:100},bh:{x:670,y:360,r:70,h:54},st:{x:1092,y:358,a:.3,s:1.35},items:[],rocks:[],dock:{a:2.15,sa:0,spin:0,ss:1.12,left:20},result:null};for(let i=0;i<14;i++)g.items.push(item(i));for(let i=0;i<13;i++)g.rocks.push(rock(i));} function item(i){let r=170+i*67%235,a=i/14*TAU+(i%3)*.22;return{x:g?g.bh.x+Math.cos(a)*r:670+Math.cos(a)*r,y:g?g.bh.y+Math.sin(a)*r*.72:360+Math.sin(a)*r*.72,got:false,p:i}} function rock(i){let r=135+i*89%335,a=i/13*TAU+1.1;return{x:670+Math.cos(a)*r,y:360+Math.sin(a)*r*.78,vx:Math.sin(a)*(16+i%4*6),vy:-Math.cos(a)*(14+i%5*4),r:9+i%4*3,a,s:-1+i%7*.34}} function start(){reset();state='fly';ov.innerHTML='';msg='Mission clock started. Recover packets and reach the station.';msgT=3} function best(){return +localStorage.getItem(KEY)||0}function setBest(n){if(n>best())localStorage.setItem(KEY,n)}function updateBest(){bestEl.textContent=fmt(best())} function mult(){let d=Math.hypot(g.bh.x-g.p.x,g.bh.y-g.p.y);return d<92?7:d<132?5:d<190?4:d<270?3:d<380?2:1} function burn(){return keys.w||keys.arrowup||keys[' ']||touch.burn}function steer(){return (keys.d||keys.arrowright||touch.right?1:0)-(keys.a||keys.arrowleft||touch.left?1:0)}function dockKey(){let v=keys.e||keys.enter||touch.dock;touch.dock=false;return v} function damage(n){g.p.hull=clamp(g.p.hull-n,0,100);flash=1} function update(dt){flash=Math.max(0,flash-dt*2.6);msgT=Math.max(0,msgT-dt);if(state==='fly')fly(dt);if(state==='dock')dock(dt)} function fly(dt){let p=g.p,b=g.bh;g.t+=dt;p.a+=steer()*dt*3.2;if(burn()&&p.fuel>0){p.vx+=Math.cos(p.a)*250*dt;p.vy+=Math.sin(p.a)*250*dt;p.fuel=clamp(p.fuel-dt*14,0,100)}let dx=b.x-p.x,dy=b.y-p.y,d=Math.hypot(dx,dy),force=clamp(112000/Math.max(d*d,9000),18,335);p.vx+=dx/d*force*dt;p.vy+=dy/d*force*dt;p.vx*=.996;p.vy*=.996;p.x+=p.vx*dt;p.y+=p.vy*dt;g.st.a+=g.st.s*dt;g.bestMult=Math.max(g.bestMult,mult()); for(const it of g.items){it.p+=dt*3;if(!it.got&&dist(p,it)<27){it.got=true;g.pack++;g.score+=650*mult();msg=`Data packet recovered: ${g.pack}/14`;msgT=1.3}} for(const r of g.rocks){r.a+=r.s*dt;r.x+=r.vx*dt;r.y+=r.vy*dt;if(Math.hypot(r.x-b.x,r.y-b.y)>540||Math.hypot(r.x-b.x,r.y-b.y)<96)Object.assign(r,rock(Math.random()*999|0));if(dist(p,r)<r.r+14){damage(13);p.vx-=Math.cos(p.a)*55;p.vy-=Math.sin(p.a)*55;msg='Hull impact detected.';msgT=1.1}} if(d<b.h){finish('Mission lost beyond the event horizon');return}if(d<b.r+24)damage(dt*28);if(p.x<-90||p.x>W+90||p.y<-90||p.y>H+90){damage(dt*18);p.vx+=(W/2-p.x)*dt*.18;p.vy+=(H/2-p.y)*dt*.18}if(p.hull<=0){finish('Mission failed: hull integrity lost');return}if((dockKey()&&dist(p,g.st)<128)||g.t>=g.max){state='dock';g.dock.sa=g.st.a;g.dock.a=norm(p.a);g.dock.left=20;msg='Docking sequence armed.';msgT=2}} function dock(dt){let d=g.dock;d.left-=dt;d.sa=norm(d.sa+d.ss*dt);d.spin+=steer()*dt*2.3;d.spin*=.985;d.a=norm(d.a+d.spin*dt);if(burn())d.spin*=.94;if(dockKey())resolve();else if(d.left<=0){g.grade='Failed';g.bonus=0;finish('Docking window expired')}} function preview(){let ad=Math.abs(ang(g.dock.a,g.dock.sa)),sd=Math.abs(g.dock.spin-g.dock.ss);return ad<.1&&sd<.18?'S':ad<.2&&sd<.32?'A':ad<.36&&sd<.56?'B':ad<.6&&sd<.82?'C':'Risk'} function resolve(){let grade=preview(),bonus={S:11000,A:7200,B:4200,C:1600,Risk:0}[grade];if(grade==='Risk'){grade='Failed';damage(26)}if(grade==='C')damage(12);g.grade=grade;g.bonus=bonus;finish(grade==='Failed'?'Rough contact. Docking failed.':'Docking confirmed')} function finish(reason){state='score';let survival=Math.min(g.t,g.max)*44,data=g.pack*650,fuel=g.p.fuel*38,pen=(100-g.p.hull)*92,score=Math.max(0,Math.round((data+survival+fuel+g.bonus)*g.bestMult-pen));g.result={reason,score,years:Math.max(1,Math.round(g.t*g.bestMult*.42)),data,gpack:g.pack,fuel:Math.round(g.p.fuel),hull:Math.round(g.p.hull),mult:g.bestMult,grade:g.grade,bonus:g.bonus};setBest(score);updateBest();scoreOverlay()} function draw(){space();if(state==='menu')attract();if(state==='fly')drawFly();if(state==='dock')drawDock();if(state==='score')attract();if(flash){x.fillStyle=`rgba(255,130,130,${flash*.17})`;x.fillRect(0,0,W,H)}drawHud()} function space(){let gr=x.createRadialGradient(680,360,80,680,360,760);gr.addColorStop(0,'#08111f');gr.addColorStop(.45,'#030813');gr.addColorStop(1,'#01030a');x.fillStyle=gr;x.fillRect(0,0,W,H);for(const s of stars){x.globalAlpha=s.a+Math.sin(performance.now()/900+s.x)*.06;x.fillStyle='#dcecff';x.beginPath();x.arc(s.x,s.y,s.r,0,TAU);x.fill()}x.globalAlpha=1} function black(b){x.save();x.translate(b.x,b.y);x.rotate(performance.now()/6200);let a=x.createRadialGradient(0,0,b.r*.6,0,0,b.r*3.1);a.addColorStop(0,'rgba(255,230,190,.78)');a.addColorStop(.2,'rgba(255,164,82,.4)');a.addColorStop(.55,'rgba(118,174,255,.12)');a.addColorStop(1,'rgba(0,0,0,0)');x.scale(1.55,.42);x.fillStyle=a;x.beginPath();x.arc(0,0,b.r*3.1,0,TAU);x.fill();x.restore();x.save();x.translate(b.x,b.y);let g2=x.createRadialGradient(0,0,b.r*.7,0,0,b.r*2.2);g2.addColorStop(0,'#000');g2.addColorStop(.43,'#000');g2.addColorStop(.57,'rgba(255,235,205,.58)');g2.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=g2;x.beginPath();x.arc(0,0,b.r*2.2,0,TAU);x.fill();x.fillStyle='#000';x.beginPath();x.arc(0,0,b.h,0,TAU);x.fill();x.restore()} function orbits(){x.save();x.translate(g.bh.x,g.bh.y);x.strokeStyle='rgba(140,200,255,.13)';for(const r of[92,132,190,270,380]){x.setLineDash([4,12]);x.beginPath();x.ellipse(0,0,r,r*.72,0,0,TAU);x.stroke()}x.restore();x.setLineDash([])} function ship(px,py,a,fire){x.save();x.translate(px,py);x.rotate(a);if(fire){x.fillStyle='rgba(255,205,125,.82)';x.beginPath();x.moveTo(-18,0);x.lineTo(-48,-8);x.lineTo(-48,8);x.fill()}x.fillStyle='#ecf4ff';x.strokeStyle='#8cc8ff';x.lineWidth=2;x.beginPath();x.moveTo(23,0);x.lineTo(-16,-12);x.lineTo(-9,0);x.lineTo(-16,12);x.closePath();x.fill();x.stroke();x.fillStyle='#06101b';x.beginPath();x.arc(4,0,5,0,TAU);x.fill();x.restore()} function station(px,py,a,sc=1){x.save();x.translate(px,py);x.rotate(a);x.scale(sc,sc);x.strokeStyle='#ecf4ff';x.lineWidth=3;x.shadowColor='#8cc8ff';x.shadowBlur=12;x.beginPath();x.arc(0,0,46,0,TAU);x.stroke();for(let i=0;i<6;i++){x.rotate(TAU/6);x.beginPath();x.moveTo(0,0);x.lineTo(66,0);x.stroke();x.strokeRect(44,-7,34,14)}x.fillStyle='#06101b';x.beginPath();x.arc(0,0,20,0,TAU);x.fill();x.restore()} function drawFly(){black(g.bh);orbits();for(const it of g.items)if(!it.got){let q=1+Math.sin(it.p)*.25;x.shadowColor='#8cc8ff';x.shadowBlur=16;x.fillStyle='#8cc8ff';x.beginPath();x.arc(it.x,it.y,7*q,0,TAU);x.fill();x.shadowBlur=0;x.strokeStyle='rgba(236,244,255,.65)';x.strokeRect(it.x-10,it.y-10,20,20)}for(const r of g.rocks){x.save();x.translate(r.x,r.y);x.rotate(r.a);x.fillStyle='rgba(150,156,168,.85)';x.strokeStyle='rgba(236,244,255,.35)';x.beginPath();x.moveTo(-r.r,-r.r*.4);x.lineTo(r.r*.4,-r.r*.9);x.lineTo(r.r,r.r*.2);x.lineTo(-r.r*.2,r.r);x.closePath();x.fill();x.stroke();x.restore()}station(g.st.x,g.st.y,g.st.a);ship(g.p.x,g.p.y,g.p.a,burn());if(msgT>0)banner(msg)} function drawDock(){black({x:210,y:360,r:52,h:38});x.save();x.translate(760,360);x.strokeStyle='rgba(140,200,255,.16)';for(let r=120;r<=260;r+=35){x.beginPath();x.arc(0,0,r,0,TAU);x.stroke()}x.restore();station(760,360,g.dock.sa,1.6);ship(760+Math.cos(g.dock.a)*190,360+Math.sin(g.dock.a)*190,g.dock.a+Math.PI,burn());gauge();if(msgT>0)banner(msg)} function gauge(){let ad=Math.abs(ang(g.dock.a,g.dock.sa)),sd=Math.abs(g.dock.spin-g.dock.ss),aq=clamp(1-ad/.6,0,1),sq=clamp(1-sd/.82,0,1);panel(72,548,420,112);bar(110,590,320,12,aq,'Angle alignment');bar(110,630,320,12,sq,'Spin match');x.fillStyle=aq>.66&&sq>.66?'#9cffc5':'#ffd08a';x.font='700 20px system-ui';x.fillText(aq>.66&&sq>.66?'Docking window open':'Hold alignment',110,572);x.fillStyle='#ecf4ff';x.font='700 28px system-ui';x.fillText(Math.ceil(g.dock.left)+'s',388,572)} function bar(px,py,w,h,v,l){x.fillStyle='rgba(236,244,255,.12)';x.fillRect(px,py,w,h);x.fillStyle=v>.72?'#9cffc5':'#ffd08a';x.fillRect(px,py,w*v,h);x.fillStyle='#9aaec9';x.font='12px system-ui';x.fillText(l,px,py-8)} function panel(px,py,w,h){x.fillStyle='rgba(2,7,14,.74)';x.strokeStyle='rgba(140,200,255,.28)';x.beginPath();x.roundRect(px,py,w,h,18);x.fill();x.stroke()}function banner(t){panel(376,632,528,44);x.fillStyle='#ecf4ff';x.font='700 17px system-ui';x.textAlign='center';x.fillText(t,640,660);x.textAlign='left'} function attract(){black(g.bh);station(g.st.x,g.st.y,performance.now()/1000);ship(220,395,-.08,false)} function drawHud(){if(state==='menu'||state==='score'){hud.innerHTML='';return}let vals=state==='dock'?[['Phase','Docking'],['Window',Math.ceil(g.dock.left)+'s'],['Grade',preview()],['Hull',Math.round(g.p.hull)+'%'],['Peak','x'+g.bestMult]]:[['Time',Math.ceil(Math.max(0,g.max-g.t))+'s'],['Fuel',Math.round(g.p.fuel)+'%'],['Hull',Math.round(g.p.hull)+'%'],['Dilation','x'+mult()],['Data',g.pack+'/14']];hud.innerHTML=vals.map(v=>`<div class='hud-item'><span>${v[0]}</span><b>${v[1]}</b></div>`).join('')} function scoreText(){let r=g.result;return ['I completed Docking Run.','',`Final Score: ${fmt(r.score)}`,`Docking Grade: ${r.grade}`,`Data Recovered: ${r.gpack}/14`,`Dilation Peak: x${r.mult}`,`Time Lost on Earth: ${r.years} years`,'','Can you beat my run?'].join(String.fromCharCode(10))} function scoreOverlay(){let r=g.result;ov.innerHTML=`<div class='card'><h2>${r.reason}</h2><p>Your mission scorecard is ready. Copy it and share it anywhere.</p><div class='grid'><div><span>Final Score</span><b>${fmt(r.score)}</b></div><div><span>Docking Grade</span><b>${r.grade}</b></div><div><span>Data Recovered</span><b>${r.gpack}/14</b></div><div><span>Dilation Peak</span><b>x${r.mult}</b></div><div><span>Time Lost on Earth</span><b>${r.years} years</b></div><div><span>Local Best</span><b>${fmt(best())}</b></div></div><button class='primary' onclick='start()'>Run Again</button> <button onclick='copyScore()'>Copy Scorecard</button><p id='copyStatus'></p></div>`} window.start=start;window.copyScore=async()=>{try{await navigator.clipboard.writeText(scoreText());copyStatus.textContent='Scorecard copied.'}catch{copyStatus.textContent='Copy failed; select the text from your result manually.'}}; const touch={left:false,right:false,burn:false,dock:false};for(const [id,k] of [['left','left'],['right','right'],['burn','burn'],['dock','dock']]){let b=document.getElementById(id);b.onpointerdown=e=>{e.preventDefault();touch[k]=true};b.onpointerup=b.onpointercancel=b.onpointerleave=()=>touch[k]=false} addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(state==='menu'&&(e.key==='Enter'||e.key===' '))start();if(state==='score'&&e.key.toLowerCase()==='r')start()});addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false); function menu(){ov.innerHTML=`<div class='card'><h2>Recover the archive.</h2><p>Enter the gravity well, recover data packets, and dock before the mission clock expires. The closer you fly to the singularity, the higher your score multiplier becomes.</p><p>First version: one mission, local high score, and copyable scorecard.</p><button class='primary' onclick='start()'>Start Mission</button></div>`} function frame(t){let dt=Math.min(.033,(t-last)/1000||0);last=t;update(dt);draw();requestAnimationFrame(frame)}reset();updateBest();menu();requestAnimationFrame(frame);
+import * as THREE from 'three';
+
+const canvas = document.getElementById('scene');
+const overlay = document.getElementById('centerOverlay');
+const hud = document.getElementById('hud');
+const bestEl = document.getElementById('bestScore');
+const feed = document.getElementById('missionLine');
+const restartMini = document.getElementById('restartMini');
+const copyMini = document.getElementById('copyMini');
+
+const KEY = 'docking-run-webgl-best';
+const keys = {};
+const touch = { left: false, right: false, burn: false, dock: false };
+const fmt = (n) => new Intl.NumberFormat('en-US').format(Math.round(n));
+const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+const rand = (a, b) => a + Math.random() * (b - a);
+const norm = (v) => {
+  let n = (v + Math.PI) % (Math.PI * 2);
+  if (n < 0) n += Math.PI * 2;
+  return n - Math.PI;
+};
+
+let renderer, scene, camera, stars, disk, horizon, ship, station, trail;
+let packets = [], debris = [];
+let last = 0;
+let mode = 'menu';
+let g;
+
+function best() { return Number(localStorage.getItem(KEY) || 0); }
+function setBest(score) { if (score > best()) localStorage.setItem(KEY, String(score)); }
+function bestUI() { bestEl.textContent = fmt(best()); }
+function say(text) { feed.textContent = text; }
+
+function init3d() {
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.25;
+
+  scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x020713, 0.0012);
+  camera = new THREE.PerspectiveCamera(52, 16 / 9, 0.1, 2500);
+  camera.position.set(0, 18, 96);
+
+  scene.add(new THREE.AmbientLight(0xaec7ff, 0.48));
+  const blue = new THREE.PointLight(0x8cc8ff, 2.4, 800); blue.position.set(70, 60, 40); scene.add(blue);
+  const warm = new THREE.PointLight(0xffc47d, 3.8, 600); warm.position.set(-30, 18, -10); scene.add(warm);
+
+  makeStars(); makeHole(); makeShip(); makeStation(); makeTrail(); resize();
+}
+
+function makeStars() {
+  const n = 4200, pos = new Float32Array(n * 3), col = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) {
+    const r = rand(280, 1700), a = rand(0, Math.PI * 2), y = rand(-420, 420);
+    pos[i*3] = Math.cos(a) * r; pos[i*3+1] = y * .55; pos[i*3+2] = Math.sin(a) * r;
+    const c = new THREE.Color().setHSL(rand(.56,.68), rand(.25,.7), rand(.65,1));
+    col[i*3] = c.r; col[i*3+1] = c.g; col[i*3+2] = c.b;
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  stars = new THREE.Points(geo, new THREE.PointsMaterial({ size: 1.8, vertexColors: true, transparent: true, opacity: .96 }));
+  scene.add(stars);
+}
+
+function makeHole() {
+  const mat = new THREE.ShaderMaterial({
+    transparent: true, side: THREE.DoubleSide, depthWrite: false,
+    uniforms: { time: { value: 0 } },
+    vertexShader: 'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
+    fragmentShader: `varying vec2 vUv;uniform float time;float h(float n){return fract(sin(n)*43758.5);}float no(vec2 x){vec2 p=floor(x),f=fract(x);f=f*f*(3.0-2.0*f);float n=p.x+p.y*57.0;return mix(mix(h(n),h(n+1.0),f.x),mix(h(n+57.0),h(n+58.0),f.x),f.y);}void main(){vec2 p=vUv*2.0-1.0;float r=length(p);float a=atan(p.y,p.x);float band=smoothstep(.95,.05,abs(r-.58));float wave=sin(a*10.0-time*2.2+r*15.0)*.5+.5;float d=no(vec2(a*2.0,r*9.0-time*.55));float hot=smoothstep(.25,.9,wave*.65+d*.7);vec3 c=mix(vec3(.08,.22,.62),vec3(1.0,.58,.22),hot);float alpha=band*clamp(1.22-r,0.0,1.0);gl_FragColor=vec4(c*(1.0+d*.8),alpha*.95);}`
+  });
+  disk = new THREE.Mesh(new THREE.RingGeometry(13, 36, 160, 24), mat);
+  disk.rotation.x = Math.PI / 2.65;
+  scene.add(disk);
+  horizon = new THREE.Mesh(new THREE.SphereGeometry(15, 96, 96), new THREE.MeshBasicMaterial({ color: 0x000000 }));
+  scene.add(horizon);
+  const halo = new THREE.Mesh(new THREE.SphereGeometry(19, 96, 96), new THREE.MeshBasicMaterial({ color: 0xffcc8b, transparent: true, opacity: .11 }));
+  scene.add(halo);
+}
+
+function makeShip() {
+  ship = new THREE.Group();
+  const bodyMat = new THREE.MeshStandardMaterial({ color: 0xf1f6ff, metalness: .75, roughness: .2, emissive: 0x0f2742, emissiveIntensity: .35 });
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(1.15, 5.4, 8, 18), bodyMat); body.rotation.z = Math.PI / 2; ship.add(body);
+  const nose = new THREE.Mesh(new THREE.ConeGeometry(1.15, 2.4, 24), bodyMat); nose.rotation.z = -Math.PI / 2; nose.position.x = 4; ship.add(nose);
+  const finMat = new THREE.MeshStandardMaterial({ color: 0x9fb6d4, metalness: .65, roughness: .28 });
+  for (const y of [-1.45, 1.45]) { const fin = new THREE.Mesh(new THREE.BoxGeometry(2.4,.16,1), finMat); fin.position.set(-.3,y,0); ship.add(fin); }
+  const flame = new THREE.Mesh(new THREE.ConeGeometry(.7, 3.4, 24), new THREE.MeshBasicMaterial({ color: 0xffb45c, transparent: true, opacity: .85 }));
+  flame.name = 'flame'; flame.rotation.z = Math.PI / 2; flame.position.x = -5.2; ship.add(flame);
+  scene.add(ship);
+}
+
+function makeStation() {
+  station = new THREE.Group();
+  const metal = new THREE.MeshStandardMaterial({ color: 0xddeaff, metalness: .85, roughness: .26, emissive: 0x10284a, emissiveIntensity: .55 });
+  station.add(new THREE.Mesh(new THREE.TorusGeometry(8, .55, 16, 96), metal));
+  for (let i = 0; i < 8; i++) {
+    const a = i / 8 * Math.PI * 2;
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(12,.25,.25), metal); arm.rotation.z = a; station.add(arm);
+    const pod = new THREE.Mesh(new THREE.BoxGeometry(2.2,1.05,1.3), metal); pod.position.set(Math.cos(a)*12, Math.sin(a)*12, 0); pod.rotation.z = a; station.add(pod);
+  }
+  station.position.set(76, 7, -10); station.rotation.x = Math.PI / 2.4; scene.add(station);
+}
+
+function makeTrail() {
+  const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(240), 3));
+  trail = new THREE.Line(geo, new THREE.LineBasicMaterial({ color: 0x9fd6ff, transparent: true, opacity: .3 })); scene.add(trail);
+}
+
+function reset() {
+  g = { time:0, max:82, fuel:100, hull:100, packets:0, bestMult:1, mult:1, orbit:88, theta:Math.PI+.15, speed:.38, y:7, dockReady:false, dockTime:22, dockAngle:0, dockSpin:0, stationAngle:0, grade:'Pending', bonus:0, result:null };
+  makePackets(); makeDebris(); updateTrail(true); say('Launch ready. Recover data and approach the docking corridor.');
+}
+
+function makePackets() {
+  packets.forEach(p => scene.remove(p.mesh)); packets = [];
+  for (let i = 0; i < 16; i++) {
+    const a = i / 16 * Math.PI * 2 + rand(-.22,.22), r = rand(24, 82);
+    const mesh = new THREE.Mesh(new THREE.OctahedronGeometry(rand(.6,1.25),0), new THREE.MeshStandardMaterial({ color:0x8fd4ff, emissive:0x58beff, emissiveIntensity:1.4, metalness:.25, roughness:.08 }));
+    scene.add(mesh); packets.push({ mesh, a, r, live:true, bob:rand(0,6) });
+  }
+}
+function makeDebris() {
+  debris.forEach(d => scene.remove(d.mesh)); debris = [];
+  for (let i = 0; i < 22; i++) {
+    const mesh = new THREE.Mesh(new THREE.IcosahedronGeometry(rand(.55,1.9),0), new THREE.MeshStandardMaterial({ color:0x7f8795, roughness:.9, metalness:.08 }));
+    const a = rand(0, Math.PI*2), r = rand(32,105); scene.add(mesh); debris.push({ mesh, a, r, sp:rand(.18,.58), bob:rand(0,9) });
+  }
+}
+
+function start() { reset(); mode = 'flight'; overlay.innerHTML = ''; }
+function menu() { mode='menu'; overlay.innerHTML = `<div class="overlay-card"><h2>Cinematic Singularity Run</h2><p>Skim the gravity well for a higher score multiplier, recover data packets, and finish with a precision docking sequence.</p><div class="overlay-actions"><button class="primary-button" id="launchButton">Launch Mission</button></div></div>`; document.getElementById('launchButton').onclick = start; }
+
+function updateFlight(dt) {
+  g.time += dt;
+  const turn = (keys.a || keys.arrowleft || touch.left ? 1 : 0) - (keys.d || keys.arrowright || touch.right ? 1 : 0);
+  const burn = keys.w || keys.arrowup || keys[' '] || touch.burn;
+  if (burn && g.fuel > 0) { g.orbit = clamp(g.orbit - dt*10, 15, 96); g.speed += dt*.18; g.fuel = clamp(g.fuel - dt*12, 0, 100); }
+  else g.orbit = clamp(g.orbit + dt*3.0, 15, 96);
+  g.speed = clamp((g.speed - turn*dt*.1) * .998, .1, .85); g.theta += g.speed * dt; g.y = Math.sin(g.theta*1.7) * 5;
+  g.mult = g.orbit < 22 ? 7 : g.orbit < 30 ? 5 : g.orbit < 40 ? 4 : g.orbit < 54 ? 3 : g.orbit < 70 ? 2 : 1; g.bestMult = Math.max(g.bestMult, g.mult);
+  ship.position.set(Math.cos(g.theta)*g.orbit, g.y, Math.sin(g.theta)*g.orbit*.68); ship.rotation.set(.1, -.05, -g.theta + Math.PI/2);
+  ship.getObjectByName('flame').visible = !!burn && g.fuel > 0;
+  if (g.orbit < 18) damage(dt*16, 'Extreme tidal stress detected.');
+  if (g.orbit < 14.8) return finish('Mission lost beyond the event horizon.');
+  updatePackets(dt); updateDebris(dt); updateTrail(); updateCamera(dt);
+  station.rotation.z += dt*.7; disk.rotation.z += dt*.18; disk.material.uniforms.time.value += dt; stars.rotation.y += dt*.0012;
+  if (!g.dockReady && (g.time > 34 || g.packets >= 10)) { g.dockReady = true; say('Docking corridor available. Press Dock when ready.'); }
+  if ((keys.e || keys.enter || touch.dock) && g.dockReady) { touch.dock = false; enterDock(); }
+  if (g.time >= g.max) enterDock();
+}
+
+function updatePackets(dt) {
+  for (const p of packets) if (p.live) {
+    p.a += dt*.22; p.bob += dt*1.6; p.mesh.position.set(Math.cos(p.a)*p.r, Math.sin(p.bob)*2.2, Math.sin(p.a)*p.r*.56); p.mesh.rotation.x += dt; p.mesh.rotation.y += dt*1.3;
+    if (p.mesh.position.distanceTo(ship.position) < 3.4) { p.live = false; p.mesh.visible = false; g.packets++; say(`Data packet recovered: ${g.packets}/16`); }
+  }
+}
+function updateDebris(dt) {
+  for (const d of debris) {
+    d.a += dt*d.sp; d.mesh.position.set(Math.cos(d.a)*d.r, Math.sin(d.a*1.7+d.bob)*10, Math.sin(d.a)*d.r*.75); d.mesh.rotation.x += dt*.7; d.mesh.rotation.y += dt*1.1;
+    if (d.mesh.position.distanceTo(ship.position) < 2.8) { damage(10, 'Debris strike detected.'); d.a += .8; d.r += 10; }
+  }
+}
+function damage(n, text) { g.hull = clamp(g.hull - n, 0, 100); say(text); if (g.hull <= 0) finish('Mission failed. Hull integrity lost.'); }
+function updateTrail(resetTrail=false) {
+  const arr = trail.geometry.attributes.position.array;
+  if (!resetTrail) for (let i = 79; i > 0; i--) { arr[i*3]=arr[(i-1)*3]; arr[i*3+1]=arr[(i-1)*3+1]; arr[i*3+2]=arr[(i-1)*3+2]; }
+  for (let i = resetTrail ? 0 : 0; i < (resetTrail ? 80 : 1); i++) { arr[i*3]=ship.position.x; arr[i*3+1]=ship.position.y; arr[i*3+2]=ship.position.z; }
+  trail.geometry.attributes.position.needsUpdate = true;
+}
+function updateCamera(dt) { const target = ship.position.clone().add(new THREE.Vector3(28, 10, 34)); camera.position.lerp(target, 1-Math.exp(-dt*2.2)); camera.lookAt(0,0,0); }
+
+function enterDock() { mode='dock'; g.dockTime=22; g.dockAngle=0; g.dockSpin=0; g.stationAngle=station.rotation.z; say('Docking sequence armed. Match spin and alignment.'); }
+function updateDock(dt) {
+  g.time += dt; g.dockTime -= dt;
+  const turn = (keys.a || keys.arrowleft || touch.left ? 1 : 0) - (keys.d || keys.arrowright || touch.right ? 1 : 0);
+  const burn = keys.w || keys.arrowup || keys[' '] || touch.burn;
+  g.dockSpin = (g.dockSpin - turn*dt*1.8) * .992; if (burn) g.dockSpin *= .985; g.dockAngle += g.dockSpin*dt; g.stationAngle += dt*1.18;
+  station.position.lerp(new THREE.Vector3(14,0,0), 1-Math.exp(-dt*2)); station.rotation.set(Math.PI/2.15,.18,g.stationAngle);
+  ship.position.lerp(new THREE.Vector3(-16,0,7), 1-Math.exp(-dt*2.3)); ship.rotation.set(.06,.08,g.dockAngle+.18); ship.getObjectByName('flame').visible = !!burn;
+  camera.position.lerp(new THREE.Vector3(2,6,40), 1-Math.exp(-dt*2.1)); camera.lookAt(0,0,0);
+  disk.material.uniforms.time.value += dt; disk.rotation.z += dt*.18;
+  if ((keys.e || keys.enter || touch.dock)) { touch.dock=false; resolveDock(); }
+  if (g.dockTime <= 0) { g.grade='Failed'; g.bonus=0; finish('Docking window expired.'); }
+}
+function preview() { const a=Math.abs(norm(g.dockAngle-g.stationAngle)), s=Math.abs(g.dockSpin-1.18); return a<.12&&s<.18?'Perfect':a<.22&&s<.3?'Good':a<.38&&s<.5?'Stable':a<.58&&s<.8?'Rough':'Unsafe'; }
+function resolveDock() { const p=preview(); g.grade = p==='Perfect'?'S':p==='Good'?'A':p==='Stable'?'B':p==='Rough'?'C':'Failed'; g.bonus = {S:12000,A:8000,B:4800,C:1600,Failed:0}[g.grade]; if (g.grade==='C') damage(8,'Hard contact during docking.'); if (g.grade==='Failed') damage(22,'Docking collision.'); finish(g.grade==='Failed'?'Docking failed.':'Docking confirmed.'); }
+function finish(reason) { mode='score'; const score=Math.max(0,Math.round((g.packets*850+Math.min(g.time,g.max)*52+g.fuel*45+g.bonus)*g.bestMult-(100-g.hull)*95)); g.result={reason,score,grade:g.grade,data:g.packets,mult:g.bestMult,years:Math.max(1,Math.round(g.time*g.bestMult*.52)),fuel:Math.round(g.fuel),hull:Math.round(g.hull)}; setBest(score); bestUI(); showScore(); say(reason); }
+function showScore() { const r=g.result; overlay.innerHTML = `<div class="overlay-card"><h2>${r.reason}</h2><p>Your mission scorecard is ready.</p><div class="overlay-grid"><div><span>Final Score</span><strong>${fmt(r.score)}</strong></div><div><span>Docking Grade</span><strong>${r.grade}</strong></div><div><span>Data</span><strong>${r.data}/16</strong></div><div><span>Dilation</span><strong>x${r.mult}</strong></div><div><span>Earth Time Lost</span><strong>${r.years} years</strong></div><div><span>Local Best</span><strong>${fmt(best())}</strong></div></div><div class="overlay-actions"><button class="primary-button" id="againButton">Run Again</button><button id="copyButton">Copy Scorecard</button></div><p id="copyStatus"></p></div>`; document.getElementById('againButton').onclick=start; document.getElementById('copyButton').onclick=copyScore; }
+function scoreText() { if (!g?.result) return 'No score yet.'; const r=g.result; return [`I completed Docking Run.`,``,`Final Score: ${fmt(r.score)}`,`Docking Grade: ${r.grade}`,`Data Recovered: ${r.data}/16`,`Dilation Peak: x${r.mult}`,`Time Lost on Earth: ${r.years} years`,``,`Can you beat my run?`].join('\n'); }
+async function copyScore() { try { await navigator.clipboard.writeText(scoreText()); const s=document.getElementById('copyStatus'); if (s) s.textContent='Scorecard copied.'; say('Scorecard copied.'); } catch { say('Copy failed on this browser.'); } }
+
+function hudUI() { if (mode==='menu'||mode==='score') { hud.innerHTML=''; return; } const vals = mode==='flight' ? [['Time',`${Math.ceil(Math.max(0,g.max-g.time))}s`],['Fuel',`${Math.round(g.fuel)}%`],['Hull',`${Math.round(g.hull)}%`],['Data',`${g.packets}/16`],['Dilation',`x${g.mult}`],['Peak',`x${g.bestMult}`]] : [['Phase','Docking'],['Window',`${Math.ceil(g.dockTime)}s`],['Hull',`${Math.round(g.hull)}%`],['Fuel',`${Math.round(g.fuel)}%`],['Align',preview()],['Peak',`x${g.bestMult}`]]; hud.innerHTML=vals.map(([a,b])=>`<div class="hud-card"><span>${a}</span><strong>${b}</strong></div>`).join(''); }
+function resize() { const w=canvas.clientWidth, h=canvas.clientHeight || w*9/16; renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix(); }
+function frame(t) { const dt=Math.min(.033,(t-last)/1000||.016); last=t; if (mode==='flight') updateFlight(dt); if (mode==='dock') updateDock(dt); horizon.scale.setScalar(1+Math.sin(t*.001)*.008); stars.rotation.y += dt*.0005; hudUI(); renderer.render(scene,camera); requestAnimationFrame(frame); }
+
+function bind() {
+  for (const [id,k] of [['btnLeft','left'],['btnRight','right'],['btnBurn','burn'],['btnDock','dock']]) { const b=document.getElementById(id); b.onpointerdown=e=>{e.preventDefault();touch[k]=true}; b.onpointerup=b.onpointercancel=b.onpointerleave=()=>touch[k]=false; }
+  addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(mode==='menu'&&(e.key===' '||e.key==='Enter'))start();if(mode==='score'&&e.key.toLowerCase()==='r')start();});
+  addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false); addEventListener('resize',resize);
+  restartMini.onclick=start; copyMini.onclick=copyScore;
+}
+
+init3d(); reset(); bestUI(); bind(); menu(); requestAnimationFrame(frame);
