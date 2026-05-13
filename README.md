@@ -1,18 +1,35 @@
 # Docking Run
 
-**Docking Run** is a small open-source browser game inspired by cinematic hard-science-fiction themes: black-hole gravity, time dilation, limited fuel, data recovery, and a final docking maneuver.
+**Docking Run** is a mobile/web cinematic browser game built with WebGL and Three.js.
 
-This is an unofficial fan project. It does not use film logos, music, characters, dialogue, or copyrighted movie assets.
+The game is about high-risk orbital flight, data recovery, time-dilation scoring, and a final docking sequence. It uses original visuals and procedural WebGL effects.
+
+## Current build
+
+- Mobile and desktop browser support
+- WebGL / Three.js rendering
+- Shader-based accretion disk visual
+- 3D starfield
+- 3D spacecraft
+- 3D rotating station
+- Data packet collection
+- Debris hazards
+- Hull and fuel systems
+- Risk-based dilation multiplier
+- Final docking mini-game
+- Local best score
+- Copyable scorecard
+- GitHub Pages workflow
 
 ## Play locally
 
-No build step is required.
+Serve the repo with a local web server:
 
 ```bash
 python3 -m http.server 5173
 ```
 
-Then open:
+Open:
 
 ```text
 http://localhost:5173
@@ -20,46 +37,37 @@ http://localhost:5173
 
 ## Controls
 
-- **W / Arrow Up / Space**: burn engine
-- **A / Arrow Left**: rotate left
-- **D / Arrow Right**: rotate right
-- **E / Enter**: dock / confirm
+### Desktop
+
+- **A**: steer left
+- **D**: steer right
+- **W** or **Space**: burn
+- **E** or **Enter**: dock / confirm
 - **R**: restart from score screen
 
-Mobile controls are built into the page.
+### Mobile
+
+Use the on-screen controls below the game.
 
 ## Gameplay
 
-1. Fly near the black hole to increase your dilation multiplier.
-2. Collect data packets.
-3. Avoid debris and the event horizon.
-4. Save enough fuel for final docking.
-5. Match the rotating station and dock for a large bonus.
+1. Launch into orbit.
+2. Fly closer to the gravity well for a higher multiplier.
+3. Collect data packets.
+4. Avoid debris and hull damage.
+5. Enter the docking corridor.
+6. Match station alignment and dock.
+7. Copy and share your scorecard.
 
-## Scoring
+## Deployment
 
-Your final score is based on data recovered, survival time, best dilation multiplier, final docking grade, remaining fuel, and hull damage penalties.
-
-Scores are stored locally in the player’s browser. A global leaderboard can be added later with Supabase, Firebase, or another small backend.
-
-## Deploying with GitHub Pages
-
-This repository includes a GitHub Actions workflow at `.github/workflows/pages.yml`.
+This repo includes `.github/workflows/pages.yml`.
 
 To publish:
 
-1. Go to **Settings → Pages** in this repository.
+1. Go to **Settings → Pages**.
 2. Set **Build and deployment → Source** to **GitHub Actions**.
 3. Push to `main`.
-4. The site should deploy from the workflow.
-
-## Roadmap
-
-- Shareable score image
-- Optional global leaderboard
-- More mission modes
-- Daily challenge seed
-- Sound effects using original generated tones, not copyrighted audio
 
 ## License
 
