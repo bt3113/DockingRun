@@ -3,47 +3,54 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#080907">
-  <title>Field Intercept</title>
+  <meta name="theme-color" content="#07070b">
+  <title>Drone Field Run</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <main id="app">
-    <canvas id="game"></canvas>
+    <canvas id="game" width="180" height="320" aria-label="Pixel art cornfield chase game"></canvas>
+
     <section id="hud" class="hud hidden">
       <div><span>Cliff</span><b id="dist">2200 m</b></div>
-      <div><span>Time</span><b id="time">1:52</b></div>
-      <div><span>Speed</span><b id="speed">0 km/h</b></div>
+      <div><span>Time</span><b id="time">1:45</b></div>
+      <div><span>Align</span><b id="align">100%</b></div>
       <button id="pause" aria-label="Pause">Ⅱ</button>
     </section>
+
     <section id="menu" class="panel">
-      <p class="kicker">cinematic mobile web game</p>
-      <h1>Field<br><em>Intercept</em></h1>
-      <p>Cut through the cornfield with the drone above you. Reach the cliff before the signal dies, then brake hard and stop before the edge.</p>
+      <p class="kicker">retro pixel field chase</p>
+      <h1>Drone<br><em>Field Run</em></h1>
+      <p>Follow the drone across a vast cornfield. Keep the car aligned under it, leave a crushed trail through the crop, and brake before the cliff.</p>
       <button id="start" class="primary">Start run</button>
-      <button id="brief" class="ghost">Mission brief</button>
+      <button id="brief" class="ghost">How it works</button>
     </section>
+
     <section id="briefing" class="panel hidden">
-      <h2>Mission</h2>
-      <p>No road. Stay in the field. Drag left or right to steer. The vehicle flattens corn and leaves a visible damaged track. When the cliff appears, hold brake and stop before the edge.</p>
+      <h2>Simple mission</h2>
+      <p>Drag left or right to steer through the field. The drone is your guide: stay aligned below it to keep speed. Near the cliff, hold brake and stop before the edge.</p>
       <button id="back" class="primary">Back</button>
     </section>
+
     <section id="paused" class="panel small hidden">
       <h2>Paused</h2>
       <button id="resume" class="primary">Resume</button>
       <button id="restart" class="ghost">Restart</button>
       <button id="home" class="ghost">Home</button>
     </section>
+
     <section id="ended" class="panel hidden">
-      <p id="endKicker" class="kicker">run complete</p>
+      <p class="kicker">run complete</p>
       <h2 id="endTitle">Stopped</h2>
       <p id="endText"></p>
       <button id="again" class="primary">Run again</button>
       <button id="endHome" class="ghost">Home</button>
     </section>
-    <p id="hint" class="hint hidden">drag to steer through the corn</p>
+
+    <p id="hint" class="hint hidden">drag to steer · follow the drone</p>
     <button id="brake" class="brake hidden">BRAKE</button>
   </main>
+
   <script src="main.js"></script>
 </body>
 </html>

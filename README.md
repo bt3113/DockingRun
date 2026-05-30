@@ -1,19 +1,18 @@
-# Field Intercept
+# Drone Field Run
 
-A static mobile-first browser game for GitHub Pages.
+A static GitHub Pages game with a deliberate retro pixel-art style.
 
-## Concept
+## Direction
 
-Drive through a realistic-feeling cornfield with a drone above the vehicle. The objective is to reach the cliff before time expires, then brake and stop before the edge.
+This version avoids fake realism. It uses a low-resolution pixel canvas scaled up with crisp edges, inspired by retro sunset driving art and the supplied cornfield reference.
 
 ## Gameplay
 
-- No road: the vehicle cuts directly through the cornfield.
-- Corn stalks bend and fade where the vehicle passes.
-- The truck leaves flattened crop marks and darker tire ruts.
-- Dust and flying chaff appear while moving through the crop.
-- The cliff becomes visible near the end of the run.
-- Winning requires stopping before the cliff, not just reaching it.
+- Drive anywhere through a vast cornfield.
+- Follow the drone and stay aligned beneath it.
+- The car leaves a crushed trail through the field.
+- The drone guides the player toward the cliff.
+- Near the end, hold brake and stop before the edge.
 
 ## Controls
 
@@ -22,4 +21,4 @@ Drive through a realistic-feeling cornfield with a drone above the vehicle. The 
 
 ## Hosting
 
-This project uses only static files: `index.html`, `style.css`, and `main.js`. It is compatible with GitHub Pages.
+Static files only: `index.html`, `style.css`, and `main.js`. Compatible with GitHub Pages.
