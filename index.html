@@ -1,1 +1,76 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Docking Run is a short browser space game about gravity, time dilation, data recovery, and precision docking."><title>Docking Run</title><link rel="stylesheet" href="./styles.css"></head><body><main class="shell"><section class="hero"><div><p class="eyebrow">Unofficial fan-made browser game</p><h1>Docking Run</h1><p class="lede">Fly near the singularity, recover mission data, survive time dilation, and complete the final docking sequence.</p></div><div class="best"><span>Local Best</span><b id="best">0</b></div></section><section class="frame"><canvas id="game" width="1280" height="720"></canvas><div id="hud" class="hud"></div><div id="overlay" class="overlay"></div></section><section class="controls"><button id="left">◀ Rotate</button><button id="burn">Burn</button><button id="right">Rotate ▶</button><button id="dock">Dock</button></section><section class="notes"><h2>Controls</h2><p>Desktop: <kbd>W</kbd>/<kbd>↑</kbd>/<kbd>Space</kbd> burn, <kbd>A</kbd>/<kbd>←</kbd> and <kbd>D</kbd>/<kbd>→</kbd> rotate, <kbd>E</kbd>/<kbd>Enter</kbd> dock, <kbd>R</kbd> restart.</p><p>No official movie assets are used. This is an open-source fan project built around original visuals, physics-inspired mechanics, and score sharing.</p></section></main><script src="./src/game.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#10150d" />
+  <title>Cornfield Drone Run</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main id="app" aria-label="Cornfield Drone Run mobile game">
+    <canvas id="gameCanvas" aria-label="Game screen"></canvas>
+
+    <section id="hud" class="hud hidden" aria-live="polite">
+      <div>
+        <span class="label">Distance</span>
+        <strong id="distanceText">1500 m</strong>
+      </div>
+      <div>
+        <span class="label">Time</span>
+        <strong id="timeText">01:30</strong>
+      </div>
+      <div>
+        <span class="label">Pings</span>
+        <strong id="pingsText">0</strong>
+      </div>
+      <button id="pauseBtn" class="icon-btn" aria-label="Pause game">Ⅱ</button>
+    </section>
+
+    <div id="progressWrap" class="progress hidden" aria-hidden="true">
+      <span id="progressFill"></span>
+    </div>
+
+    <section id="menu" class="panel">
+      <p class="eyebrow">Mobile web game prototype</p>
+      <h1>Cornfield<br><span>Drone Run</span></h1>
+      <p class="copy">Chase the drone through narrow corn rows. Collect signal pings, dodge debris, and use boost before time runs out.</p>
+      <button id="startBtn" class="primary">Start Game</button>
+      <button id="howBtn" class="secondary">How to Play</button>
+    </section>
+
+    <section id="howPanel" class="panel hidden">
+      <h2>How to Play</h2>
+      <ul>
+        <li>Drag left or right to steer.</li>
+        <li>Collect blue pings to gain time and boost.</li>
+        <li>Avoid hay bales, rocks, and broken fence posts.</li>
+        <li>Hold boost when the meter has charge.</li>
+      </ul>
+      <button id="backBtn" class="primary">Back</button>
+    </section>
+
+    <section id="pausePanel" class="panel compact hidden">
+      <h2>Paused</h2>
+      <button id="resumeBtn" class="primary">Resume</button>
+      <button id="restartBtn" class="secondary">Restart</button>
+      <button id="homeBtn" class="secondary">Home</button>
+    </section>
+
+    <section id="endPanel" class="panel hidden">
+      <p id="endKicker" class="eyebrow">Run Complete</p>
+      <h2 id="endTitle">Caught the Drone</h2>
+      <p id="endStats" class="copy"></p>
+      <button id="againBtn" class="primary">Play Again</button>
+      <button id="endHomeBtn" class="secondary">Home</button>
+    </section>
+
+    <div id="controls" class="controls hidden" aria-hidden="false">
+      <div class="steer-hint">↔ drag to steer</div>
+      <button id="boostBtn" class="boost" aria-label="Boost">⚡</button>
+    </div>
+  </main>
+
+  <script src="game.js"></script>
+</body>
+</html>

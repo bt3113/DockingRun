@@ -1,66 +1,25 @@
-# Docking Run
+# Cornfield Drone Run
 
-**Docking Run** is a small open-source browser game inspired by cinematic hard-science-fiction themes: black-hole gravity, time dilation, limited fuel, data recovery, and a final docking maneuver.
+A simple mobile-first web game built with plain HTML, CSS, and JavaScript. It is designed to run directly on GitHub Pages with no backend, no build step, and no external assets.
 
-This is an unofficial fan project. It does not use film logos, music, characters, dialogue, or copyrighted movie assets.
+## Game concept
 
-## Play locally
+Drive through a cornfield and chase a drone before the timer expires. Collect signal pings to gain time and boost charge. Avoid hay bales, rocks, and broken fence posts.
 
-No build step is required.
-
-```bash
-python3 -m http.server 5173
-```
-
-Then open:
-
-```text
-http://localhost:5173
-```
+This project uses an original cornfield drone chase theme and does not include movie names, characters, logos, dialogue, music, or protected assets.
 
 ## Controls
 
-- **W / Arrow Up / Space**: burn engine
-- **A / Arrow Left**: rotate left
-- **D / Arrow Right**: rotate right
-- **E / Enter**: dock / confirm
-- **R**: restart from score screen
+- Mobile: drag left or right to steer, tap and hold the lightning button to boost.
+- Desktop: use `A` / `D` or arrow keys to steer, hold `Space` to boost, press `P` to pause.
 
-Mobile controls are built into the page.
+## Files
 
-## Gameplay
+- `index.html` - app markup and UI panels
+- `style.css` - responsive mobile UI styling
+- `game.js` - Canvas rendering, controls, gameplay, collisions, and state management
+- `.github/workflows/pages.yml` - GitHub Pages deployment workflow
 
-1. Fly near the black hole to increase your dilation multiplier.
-2. Collect data packets.
-3. Avoid debris and the event horizon.
-4. Save enough fuel for final docking.
-5. Match the rotating station and dock for a large bonus.
+## Deploy on GitHub Pages
 
-## Scoring
-
-Your final score is based on data recovered, survival time, best dilation multiplier, final docking grade, remaining fuel, and hull damage penalties.
-
-Scores are stored locally in the player’s browser. A global leaderboard can be added later with Supabase, Firebase, or another small backend.
-
-## Deploying with GitHub Pages
-
-This repository includes a GitHub Actions workflow at `.github/workflows/pages.yml`.
-
-To publish:
-
-1. Go to **Settings → Pages** in this repository.
-2. Set **Build and deployment → Source** to **GitHub Actions**.
-3. Push to `main`.
-4. The site should deploy from the workflow.
-
-## Roadmap
-
-- Shareable score image
-- Optional global leaderboard
-- More mission modes
-- Daily challenge seed
-- Sound effects using original generated tones, not copyrighted audio
-
-## License
-
-MIT License. See [`LICENSE`](LICENSE).
+The included workflow publishes the repository root as a static GitHub Pages site whenever changes are pushed to `main`. In repository settings, make sure Pages is set to deploy from GitHub Actions.
