@@ -1,76 +1,49 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#10150d" />
-  <title>Cornfield Drone Run</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#080907">
+  <title>Field Intercept</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main id="app" aria-label="Cornfield Drone Run mobile game">
-    <canvas id="gameCanvas" aria-label="Game screen"></canvas>
-
-    <section id="hud" class="hud hidden" aria-live="polite">
-      <div>
-        <span class="label">Distance</span>
-        <strong id="distanceText">1500 m</strong>
-      </div>
-      <div>
-        <span class="label">Time</span>
-        <strong id="timeText">01:30</strong>
-      </div>
-      <div>
-        <span class="label">Pings</span>
-        <strong id="pingsText">0</strong>
-      </div>
-      <button id="pauseBtn" class="icon-btn" aria-label="Pause game">Ⅱ</button>
+  <main id="app">
+    <canvas id="game"></canvas>
+    <section id="hud" class="hud hidden">
+      <div><span>Cliff</span><b id="dist">2200 m</b></div>
+      <div><span>Time</span><b id="time">1:52</b></div>
+      <div><span>Speed</span><b id="speed">0 km/h</b></div>
+      <button id="pause" aria-label="Pause">Ⅱ</button>
     </section>
-
-    <div id="progressWrap" class="progress hidden" aria-hidden="true">
-      <span id="progressFill"></span>
-    </div>
-
     <section id="menu" class="panel">
-      <p class="eyebrow">Mobile web game prototype</p>
-      <h1>Cornfield<br><span>Drone Run</span></h1>
-      <p class="copy">Chase the drone through narrow corn rows. Collect signal pings, dodge debris, and use boost before time runs out.</p>
-      <button id="startBtn" class="primary">Start Game</button>
-      <button id="howBtn" class="secondary">How to Play</button>
+      <p class="kicker">cinematic mobile web game</p>
+      <h1>Field<br><em>Intercept</em></h1>
+      <p>Cut through the cornfield with the drone above you. Reach the cliff before the signal dies, then brake hard and stop before the edge.</p>
+      <button id="start" class="primary">Start run</button>
+      <button id="brief" class="ghost">Mission brief</button>
     </section>
-
-    <section id="howPanel" class="panel hidden">
-      <h2>How to Play</h2>
-      <ul>
-        <li>Drag left or right to steer.</li>
-        <li>Collect blue pings to gain time and boost.</li>
-        <li>Avoid hay bales, rocks, and broken fence posts.</li>
-        <li>Hold boost when the meter has charge.</li>
-      </ul>
-      <button id="backBtn" class="primary">Back</button>
+    <section id="briefing" class="panel hidden">
+      <h2>Mission</h2>
+      <p>No road. Stay in the field. Drag left or right to steer. The vehicle flattens corn and leaves a visible damaged track. When the cliff appears, hold brake and stop before the edge.</p>
+      <button id="back" class="primary">Back</button>
     </section>
-
-    <section id="pausePanel" class="panel compact hidden">
+    <section id="paused" class="panel small hidden">
       <h2>Paused</h2>
-      <button id="resumeBtn" class="primary">Resume</button>
-      <button id="restartBtn" class="secondary">Restart</button>
-      <button id="homeBtn" class="secondary">Home</button>
+      <button id="resume" class="primary">Resume</button>
+      <button id="restart" class="ghost">Restart</button>
+      <button id="home" class="ghost">Home</button>
     </section>
-
-    <section id="endPanel" class="panel hidden">
-      <p id="endKicker" class="eyebrow">Run Complete</p>
-      <h2 id="endTitle">Caught the Drone</h2>
-      <p id="endStats" class="copy"></p>
-      <button id="againBtn" class="primary">Play Again</button>
-      <button id="endHomeBtn" class="secondary">Home</button>
+    <section id="ended" class="panel hidden">
+      <p id="endKicker" class="kicker">run complete</p>
+      <h2 id="endTitle">Stopped</h2>
+      <p id="endText"></p>
+      <button id="again" class="primary">Run again</button>
+      <button id="endHome" class="ghost">Home</button>
     </section>
-
-    <div id="controls" class="controls hidden" aria-hidden="false">
-      <div class="steer-hint">↔ drag to steer</div>
-      <button id="boostBtn" class="boost" aria-label="Boost">⚡</button>
-    </div>
+    <p id="hint" class="hint hidden">drag to steer through the corn</p>
+    <button id="brake" class="brake hidden">BRAKE</button>
   </main>
-
-  <script src="game.js"></script>
+  <script src="main.js"></script>
 </body>
 </html>
